@@ -1,0 +1,68 @@
+import itertools
+from sklearn.metrics import mean_squared_error
+
+def conv_O3(s, t, z):
+
+    pm615_25_615_am_26_temp_O3 = []
+    for e, x in enumerate(temp_O3_oct_nov):
+        pm615_25_615_am_26_temp_O3.append(x[s:t])
+
+    pm615_25_615_am_26_temp_O3_ind = []
+    for e, x in enumerate(pm615_25_615_am_26_temp_O3):
+        xx = []
+        for j, el in enumerate(x):
+            xx.append(j)
+        pm615_25_615_am_26_temp_O3_ind.append(xx)
+
+    lat_pm615_25_615_am_26_temp_O3 = []
+    for i in pm615_25_615_am_26_temp_O3:
+        kk = []
+        for j in lat_O3_57_77_ind_oct_nov:
+            if j <= len(i)-1:
+                kk.append(i[j])
+        lat_pm615_25_615_am_26_temp_O3.append(kk)
+
+    trans_temp_pm615_25_615_am_26_O3 = list(map(list, itertools.zip_longest(*lat_pm615_25_615_am_26_temp_O3, fillvalue = 0)))
+
+    rms_pm615_25_615_am_26 = []
+    for i in trans_temp_pm615_25_615_am_26_O3:
+        rms_pm615_25_615_am_26.append(mean_squared_error(model_T, i, squared=False))
+
+    min_rms_pm615_25_615_am_26 = np.argmin(rms_pm615_25_615_am_26)
+
+    temp_profile_needed = trans_temp_pm615_25_615_am_26_O3[min_rms_pm615_25_615_am_26]
+    
+    temp_all = np.array(temp_O3_oct_nov).T
+
+    p = []
+    for f, i in enumerate(temp_all):
+        for j, k in zip(i, temp_profile_needed):
+            if j == k:
+                p.append(f)
+
+    profile_number= p[0]
+    
+    O3_profiles_all = np.array(O3_oct_nov).T
+
+    O3_profile_needed = O3_profiles_all[profile_number]
+    
+    O3_ak_all = np.array(akm_O3_oct_nov2).T
+
+    AK_needed_pm615_25_615_am_26 = O3_ak_all[profile_number]
+    
+    O3_ap_all = np.array(ap_O3_oct_nov).T
+
+    apriori_needed_pm615_25_615_am_26 = O3_ap_all[profile_number]
+
+    I = np.identity(60)
+    trans_O3_ion_chem2 = list(map(list, itertools.zip_longest(*trans_O3_NOx_HOx, fillvalue = 0)))
+
+    O3_conv = AK_needed_pm615_25_615_am_26.T.dot(trans_O3_ion_chem2[z])
+
+    O3_convolved = np.array(O3_conv).T
+
+    second_term = (I - AK_needed_pm615_25_615_am_26.T).dot(apriori_needed_pm615_25_615_am_26)
+
+    conv_O3 = O3_convolved + second_term
+    
+    return conv_O3
